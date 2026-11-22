@@ -131,6 +131,6 @@ These read the capacity, the number of requests and the requests from the keyboa
 
 ## Team
 
-- Geetisha Jain - 
-- Khushi Yadav - 
-- Krisha Ahuja -
+- Geetisha Jain 
+- Khushi Yadav 
+- Krisha Ahuja 
