@@ -4,10 +4,10 @@
 #include<string>
 #include<iomanip>
 #include<sstream>
-#include "LRU.h"
-#include "FIFO.h"
-#include "LFU.h"
-#include "Optimal.h"
+#include "../LRU-Optimal/LRU.h"
+#include "../FIFO-LFU/FIFO.h"
+#include "../FIFO-LFU/LFU.h"
+#include "../LRU-Optimal/optimal.h"
 using namespace std;
 
 struct PolicyResult{
