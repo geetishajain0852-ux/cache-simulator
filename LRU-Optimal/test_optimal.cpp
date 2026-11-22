@@ -1,4 +1,4 @@
-#include "Optimal.h"
+#include "optimal.h"
 int main(){
   int capacity,n;
   cin>>capacity;
