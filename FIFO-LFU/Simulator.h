@@ -4,9 +4,9 @@
 #include<string>
 #include<iomanip>
 #include<sstream>
-#include "LRU.h"
-#include "FIFO.h"
-#include "LFU.h"
+#include "../LRU-Optimal/LRU.h"
+#include "../FIFO-LFU/FIFO.h"
+#include "../FIFO-LFU/LFU.h"
 using namespace std;
 
 // Holds the final numbers of ONE policy after a run.
