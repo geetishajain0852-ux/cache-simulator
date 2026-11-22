@@ -6,118 +6,128 @@
 using namespace std;
 class LRU{
   struct Node{
-int key;
-int val;
-Node*next;
-Node*prev;
-Node(int key1,int val1,Node*next1,Node*prev1){
-key=key1;
-val=val1;
-next=next1;
-prev=prev1;
-}
-};
-unordered_map<int,Node*>mpp;
-Node*head;
-Node*tail;
-int Capacity;
-int hits=0, misses=0, removals=0;
-int lastRemoved=-1; 
-void initialize(int capacity)
-{
- Capacity=capacity;
-head=new Node(-1,-1,nullptr,nullptr);
-tail=new Node(-1,-1,nullptr,head);
-head->next=tail;
-}
-void cleanup(){
-while(head != nullptr){
-    Node* temp = head;
-    head = head->next;
-    delete temp;
-}
-mpp.clear();
-}
-Node*deletion(Node*node){
-  Node*y=node;
-  Node*temp=y->next;
-  Node*z=y->prev;
-  y->next=nullptr;
-  y->prev=nullptr;
-  temp->prev=z;
-  z->next=temp;
-  return y;
-}
-Node*insertion(Node*node){
-node->next=head->next;
-  node->prev=head;
-head->next->prev=node;
-head->next=node;
-return node;
-}
-Node*put(int key,int val){
-  if (Capacity == 0){
-   return nullptr;
+    int key;
+    int val;
+    Node* next;
+    Node* prev;
+    Node(int key1,int val1,Node* next1,Node* prev1){
+      key=key1;
+      val=val1;
+      next=next1;
+      prev=prev1;
+    }
+  };
+
+  unordered_map<int,Node*> mpp;  
+  Node* head=nullptr;           
+  Node* tail=nullptr;           
+  int Capacity=0;
+  int hits=0, misses=0, removals=0, total=0;
+  bool removedAny=false;        
+  int lastRemoved=0;             
+
+  void initialize(int capacity){
+    Capacity=(capacity<0)?0:capacity;
+    head=new Node(-1,-1,nullptr,nullptr);
+    tail=new Node(-1,-1,nullptr,head);
+    head->next=tail;
   }
-  if (mpp.find(key)!=mpp.end()){
-    Node*y=mpp[key];
-    y->val=val;
+
+  void cleanup(){
+    while(head!=nullptr){
+      Node* temp=head;
+      head=head->next;
+      delete temp;
+    }
+    tail=nullptr;
+    mpp.clear();
+  }
+
+  // take a node out of the list
+  void deletion(Node* node){
+    Node* after=node->next;
+    Node* before=node->prev;
+    node->next=nullptr;
+    node->prev=nullptr;
+    after->prev=before;
+    before->next=after;
+  }
+
+  void insertion(Node* node){
+    node->next=head->next;
+    node->prev=head;
+    head->next->prev=node;
+    head->next=node;
+  }
+  void put(int key,int val){
+    if(Capacity==0) return;
+    if(mpp.find(key)!=mpp.end()){
+      mpp[key]->val=val;
+      return;
+    }
+    if((int)mpp.size()==Capacity){
+      Node* leastUsed=tail->prev; 
+      lastRemoved=leastUsed->key;
+      removedAny=true;
+      removals++;
+      mpp.erase(leastUsed->key);
+      deletion(leastUsed);
+      delete leastUsed;
+    }
+    Node* x=new Node(key,val,nullptr,nullptr);
+    mpp[key]=x;
+    insertion(x);
+  }
+  bool get(int key){
+    removedAny=false;
+    if(mpp.find(key)==mpp.end()){
+      misses++;
+      return false;
+    }
+    Node* y=mpp[key];
     deletion(y);
     insertion(y);
-    return y;
+    hits++;
+    return true;
   }
-  if ((int)mpp.size()==Capacity)
-  {
-    Node*y=tail->prev;
-    lastRemoved=y->key;    
-  removals++;
-    mpp.erase(y->key);
-    deletion(y);
-    delete y;
+
+  void display(){
+    cout<<"cache: ";
+    for(Node* p=tail->prev;p!=head;p=p->prev) cout<<p->key<<" ";
+    cout<<"\n";
   }
-Node*x=new Node(key,val,nullptr,head);
-mpp[key]=x;
-insertion(x);
-return x;
-}
-int get(int key){
-  lastRemoved=-1; 
-  if (mpp.find(key)==mpp.end())
-  {
-    misses++; 
-    return -1;
-  }
-  
-Node*y=mpp[key];
-deletion(y);
-insertion(y);
-hits++;
-return y->val;
-}
-void display(){
-  cout<<"cache: ";
-  for(Node*p=head->next;p!=tail;p=p->next) cout<<p->key<<" ";
-  cout<<"\n";
-}
+
 public:
-void runLRU(int capacity, const vector<int>& requests, bool show){
-  hits=0; misses=0; removals=0; lastRemoved=-1;
-  initialize(capacity);
-  for(int x : requests){
-    if(get(x)!=-1){ if(show) cout<<x<<" HIT  "; }
-    else { put(x,x); if(show) cout<<x<<" MISS "; }
-    if(show){
-      cout<<"removed: ";
-      if(lastRemoved==-1) cout<<"-"; else cout<<lastRemoved;
-      cout<<" | ";
-      display();
+  ~LRU(){ cleanup(); }
+
+  void runLRU(int capacity,const vector<int>& requests,bool show,bool printSummary=true){
+    cleanup();
+    hits=0; misses=0; removals=0; removedAny=false;
+    total=(int)requests.size();
+    initialize(capacity);
+    for(int x : requests){
+      if(get(x)){ if(show) cout<<x<<" HIT  "; }
+      else { put(x,x); if(show) cout<<x<<" MISS "; }
+      if(show){
+        cout<<"removed: ";
+        if(removedAny) cout<<lastRemoved; else cout<<"-";
+        cout<<" | ";
+        display();
+      }
     }
+    if(printSummary){
+      cout<<fixed<<setprecision(2);
+      cout<<"Capacity: "<<capacity<<" | Hits: "<<hits<<" Misses: "<<misses
+          <<" Hit ratio: "<<getHitRatio()<<"% Miss ratio: "<<getMissRatio()
+          <<"% Replacements: "<<removals<<"\n";
+    }
+    cleanup();
   }
-  int n = requests.size();
-  cout<<fixed<<setprecision(2);
-  cout<<"Capacity: "<<capacity<<" | Hits: "<<hits<<" Misses: "<<misses
-      <<" Hit ratio: "<<(n?100.0*hits/n:0)<<"% Miss ratio: "<<(n?100.0*misses/n:0)
-      <<"% Replacements: "<<removals<<"\n";
-  cleanup();
-}
+
+  int getHits() const { return hits; }
+  int getMisses() const { return misses; }
+  int getRemovals() const { return removals; }
+  int getTotal() const { return total; }
+  double getHitRatio() const { return total ? 100.0*hits/total : 0.0; }
+  double getMissRatio() const { return total ? 100.0*misses/total : 0.0; }
 };
