@@ -173,5 +173,11 @@ void runLFU(int capacity, const vector<int>& requests, bool show){
       <<"% Replacements: "<<removals<<"\n";
   cleanup();
 }
+int getHits() const { return hits; }
+  int getMisses() const { return misses; }
+  int getRemovals() const { return removals; }
+  int getTotal() const { return total; }
+  double getHitRatio() const { return total ? 100.0*hits/total : 0.0; }
+  double getMissRatio() const { return total ? 100.0*misses/total : 0.0; }
 };
 
