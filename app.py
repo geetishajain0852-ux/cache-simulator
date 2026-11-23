@@ -4,6 +4,7 @@ import subprocess
 import json
 from pathlib import Path
 import pandas as pd
+import os
 
 # Page configuration
 st.set_page_config(
@@ -134,6 +135,8 @@ h1, h2, h3 {
 
 
 # Connect Python to the C++ backend
+
+# Connect Python to the C++ backend
 def run_cpp_backend(capacity, requests):
 
     input_data = (
@@ -141,7 +144,27 @@ def run_cpp_backend(capacity, requests):
         + " ".join(map(str, requests))
     )
 
-    executable = Path(__file__).parent / "cache_backend.exe"
+    project_folder = Path(__file__).parent
+
+    # Compile the C++ backend if needed
+    executable = project_folder / (
+        "cache_backend.exe" if os.name == "nt" else "cache_backend"
+    )
+
+    if not executable.exists():
+        compile_result = subprocess.run(
+            [
+                "g++",
+                str(project_folder / "cache_backend.cpp"),
+                "-o",
+                str(executable)
+            ],
+            capture_output=True,
+            text=True
+        )
+
+        if compile_result.returncode != 0:
+            raise RuntimeError(compile_result.stderr)
 
     result = subprocess.run(
         [str(executable)],
@@ -156,6 +179,7 @@ def run_cpp_backend(capacity, requests):
     data = json.loads(result.stdout)
 
     return data["results"]
+
 
 
 def generate_trace(policy, capacity, requests):
