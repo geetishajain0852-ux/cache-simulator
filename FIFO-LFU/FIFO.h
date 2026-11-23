@@ -58,7 +58,7 @@ class FIFO{
     head->next->prev=node;
     head->next=node;
   }
-)
+
   void put(int key,int val){
     if(Capacity==0) return;
     if(mpp.find(key)!=mpp.end()){

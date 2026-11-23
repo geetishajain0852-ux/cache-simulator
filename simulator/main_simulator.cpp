@@ -1,4 +1,4 @@
-#include "simulator.h"
+#include "Simulator.h"
 
 bool readInput(int& capacity,vector<int>& requests){
   int n;
